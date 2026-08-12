@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>速查表 · Query 生命週期</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="page">
+  <div class="kicker">Reference</div>
+  <h1>Query 生命週期速查表</h1>
+
+  <div class="timeline">
+    <span class="stage fresh">fresh</span>
+    <span class="arrow">→</span>
+    <span class="stage stale">stale</span>
+    <span class="arrow">→</span>
+    <span class="stage inactive">inactive</span>
+    <span class="arrow">→</span>
+    <span class="stage gone">removed</span>
+  </div>
+
+  <h2>兩個設定，管兩件不同的事</h2>
+  <table style="width:100%; border-collapse: collapse; font-size: 0.95rem;">
+    <tr style="border-bottom:1px solid #ddd;">
+      <th style="text-align:left; padding:0.5rem 0;">設定</th>
+      <th style="text-align:left; padding:0.5rem 0;">控制什麼</th>
+      <th style="text-align:left; padding:0.5rem 0;">預設值</th>
+    </tr>
+    <tr style="border-bottom:1px solid #eee;">
+      <td style="padding:0.5rem 0;"><code>staleTime</code></td>
+      <td style="padding:0.5rem 0;">fresh → stale 的時間；fresh 期間不會背景重抓</td>
+      <td style="padding:0.5rem 0;"><code>0</code>（立刻 stale）</td>
+    </tr>
+    <tr>
+      <td style="padding:0.5rem 0;"><code>gcTime</code></td>
+      <td style="padding:0.5rem 0;">inactive 之後，資料還能留在快取多久</td>
+      <td style="padding:0.5rem 0;">5 分鐘</td>
+    </tr>
+  </table>
+
+  <h2>經驗法則</h2>
+  <ul>
+    <li>「怎麼一直重打 API」→ 先看 <code>staleTime</code>，預設是 0，資料一到手就 stale。</li>
+    <li>「明明有快取過，怎麼回來還是 loading」→ 檢查是不是超過 <code>gcTime</code>，資料被整個清掉了。</li>
+    <li>TkDodo 原話：<code>gcTime</code> 幾乎很少需要動；真正常調的是 <code>staleTime</code>。</li>
+  </ul>
+
+  <p class="aside">來源：<a href="https://tkdodo.eu/blog/practical-react-query" target="_blank" rel="noopener">Practical React Query</a></p>
+
+  <footer class="lesson-footer">
+    <div class="nav-links">
+      <a href="../lessons/0001-query-lifecycle-staletime-vs-gctime.html">回 Lesson 1</a>
+    </div>
+  </footer>
+</div>
+</body>
+</html>

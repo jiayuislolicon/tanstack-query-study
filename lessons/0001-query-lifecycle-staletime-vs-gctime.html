@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>Lesson 1 · Query 的生命週期：staleTime 與 gcTime</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<div class="page">
+
+  <div class="kicker">Lesson 1 · 對應文章 #1 Practical React Query</div>
+  <h1>Query 的生命週期：staleTime 與 gcTime</h1>
+  <p class="lede">這是你曾說「熟悉基本用法，但快取機制不熟」的第一塊拼圖——搞懂一個 query 從「新鮮」到「被清掉」中間到底發生了什麼事。</p>
+
+  <div class="win-box">
+    <span class="label">這堂課結束後你能做到</span>
+    分辨 <code>staleTime</code> 和 <code>gcTime</code> 各自控制的是哪一段時間，並能準確預測：「切換分頁再切回來，會不會重新打 API？」
+  </div>
+
+  <h2>一個 query 的四個階段</h2>
+  <p>React Query 的快取資料不是「有」或「沒有」這麼簡單，而是會經過幾個明確的階段：</p>
+
+  <div class="timeline">
+    <span class="stage fresh">fresh（新鮮）</span>
+    <span class="arrow">→</span>
+    <span class="stage stale">stale（過期）</span>
+    <span class="arrow">→</span>
+    <span class="stage inactive">inactive（無人訂閱）</span>
+    <span class="arrow">→</span>
+    <span class="stage gone">從快取移除</span>
+  </div>
+
+  <p>每個轉換點都由一個獨立的設定控制，這正是最容易搞混的地方：</p>
+
+  <h3><code>staleTime</code> — 控制 fresh → stale</h3>
+  <p>
+    資料在 <strong>fresh</strong> 狀態時，React Query 完全不會重新打 API——即使你切換分頁再切回來、或視窗重新取得焦點，都只會直接吃快取。
+    只有當資料變成 <strong>stale</strong>，這些「背景重新抓取」的時機才會被觸發。
+  </p>
+  <p><code>staleTime</code> 的預設值是 <code>0</code>——也就是說，資料一拿到手就立刻是 stale。這也是為什麼很多人會覺得「React Query 怎麼一直在背景打 API」，其實不是 bug，是預設行為。</p>
+
+  <h3><code>gcTime</code> — 控制 inactive → 從快取移除</h3>
+  <p>
+    當某個 query 已經沒有任何 component 在用它（例如你切換到別的頁面），它會先進入 <strong>inactive</strong> 狀態，但資料還留在快取裡，沒有立刻消失。
+    <code>gcTime</code>（v4 之前叫 <code>cacheTime</code>）決定這個 inactive 的資料要在快取裡留多久，預設是 <strong>5 分鐘</strong>。
+  </p>
+  <p class="aside">TkDodo 在原文中提到：「I have rarely ever needed to tamper with the <code>gcTime</code>」——換句話說，這個設定幾乎不太需要動，反而是 <code>staleTime</code> 才是你會常常想調整的那個。</p>
+
+  <h3>為什麼容易搞混</h3>
+  <p>
+    這兩個設定管的是<strong>完全不同的兩段時間</strong>：<code>staleTime</code> 管「資料還算不算新鮮」，決定要不要背景重打 API；<code>gcTime</code> 管「沒人要用的資料還能不能從快取直接拿到」，決定要不要整個丟掉重新 loading。
+    把兩者混在一起想，就會出現「明明設了 <code>staleTime: 5000</code>，怎麼過一段時間再回來還是 loading」這種困惑——那通常其實是撞到了 <code>gcTime</code> 把資料整個清掉了。
+  </p>
+
+  <div class="quiz">
+    <div class="q">情境：你把 <code>staleTime</code> 設成 1 分鐘。使用者打開頁面看到資料，切到別的 tab 待了 30 秒，切回來。這時會發生什麼？</div>
+    <button onclick="showFeedback(this, 'correct')">直接顯示快取資料，不會重新打 API（因為還在 fresh 狀態內）</button>
+    <button onclick="showFeedback(this, 'wrong')">一定會重新打 API，因為視窗重新取得焦點了</button>
+    <button onclick="showFeedback(this, 'wrong')">資料會被清空，顯示 loading</button>
+    <div class="feedback"></div>
+  </div>
+
+  <script>
+    function showFeedback(btn, kind) {
+      const box = btn.parentElement.querySelector('.feedback');
+      box.className = 'feedback ' + kind;
+      box.textContent = kind === 'correct'
+        ? '對。30 秒 < 1 分鐘的 staleTime，資料還是 fresh，refetchOnWindowFocus 這類背景重抓機制在 fresh 期間根本不會被觸發。'
+        : '不對——refetchOnWindowFocus 只有在資料是 stale 時才會真的觸發重新抓取；fresh 期間它會被略過。回頭看上面「fresh → stale」那段。';
+    }
+  </script>
+
+  <h2>原始資料 / 延伸閱讀</h2>
+  <p>本課內容依據並引用自 TkDodo 的原文，建議直接讀一次原文取得完整脈絡（含程式碼範例）：</p>
+  <p><a href="https://tkdodo.eu/blog/practical-react-query" target="_blank" rel="noopener">Practical React Query — TkDodo's blog</a></p>
+  <p>對應參考卡：<a href="../reference/query-lifecycle-cheatsheet.html">Query 生命週期速查表</a></p>
+
+  <footer class="lesson-footer">
+    <p>卡住的地方、或想確認自己理解得對不對，隨時問我——我是你的教學 agent，隨時可以追問細節或用你自己專案的例子重新解釋一次。</p>
+    <div class="nav-links">
+      <span>← （目前是第一課）</span>
+      <span>下一課：Query Keys 作為 dependency array →</span>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>
